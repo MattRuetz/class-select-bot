@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const selectableClasses = require('../config/selectableClasses.json');
 
 module.exports = {
-  name: 'select-class',
+  name: 'select-classes',
   description: 'Select your classes',
   async execute(message, isSlashCommand = false) {
     const interaction = isSlashCommand ? message : null;
@@ -41,7 +41,11 @@ module.exports = {
           .addOptions(availableChannels)
       );
 
-    const reply = { content: 'Select which classes you want to join:', components: [row] };
+    const reply = { 
+      content: 'Select which classes you want to join:', 
+      components: [row],
+      ephemeral: true 
+    };
     return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
   }
 };

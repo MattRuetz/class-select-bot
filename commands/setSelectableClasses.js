@@ -5,10 +5,18 @@ const path = require('path');
 module.exports = {
   name: 'set-selectable-classes',
   description: 'Configure which classes are available for selection (Admin only)',
-  async execute(message) {
+  async execute(message, isSlashCommand = false) {
+    const interaction = isSlashCommand ? message : null;
+    const member = isSlashCommand ? interaction.member : message.member;
+    const guild = isSlashCommand ? interaction.guild : message.guild;
+
     // Check if user has admin permissions
-    if (!message.member.permissions.has('Administrator')) {
-      return message.reply('You need Administrator permissions to use this command.');
+    if (!member.permissions.has('Administrator')) {
+      const reply = { 
+        content: 'You need Administrator permissions to use this command.',
+        ephemeral: true
+      };
+      return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
     }
 
     try {
@@ -17,7 +25,7 @@ module.exports = {
       const selectableClasses = require('../config/selectableClasses.json');
 
       // Get all text channels except general
-      const allChannels = message.guild.channels.cache
+      const allChannels = guild.channels.cache
         .filter(channel => 
           channel.type === 0 && 
           channel.name.toLowerCase() !== 'general'
@@ -29,7 +37,11 @@ module.exports = {
         }));
 
       if (allChannels.length === 0) {
-        return message.reply('No text channels found!');
+        const reply = { 
+          content: 'No text channels found!',
+          ephemeral: true
+        };
+        return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
       }
 
       const row = new ActionRowBuilder()
@@ -42,14 +54,20 @@ module.exports = {
             .addOptions(allChannels)
         );
 
-      await message.reply({ 
+      const reply = { 
         content: 'Select which classes should be available for users to join:',
-        components: [row]
-      });
+        components: [row],
+        ephemeral: true
+      };
+      return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
 
     } catch (error) {
       console.error(error);
-      await message.reply('An error occurred while processing your request.');
+      const reply = { 
+        content: 'An error occurred while processing your request.',
+        ephemeral: true
+      };
+      return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
     }
   },
 

@@ -10,12 +10,16 @@ module.exports = {
     
     const commands = [
       {
-        name: 'select-class',
+        name: 'select-classes',
         description: 'Select your classes',
       },
       {
         name: 'set-selectable-classes',
         description: 'Configure which classes are available for selection (Admin only)',
+      },
+      {
+        name: 'reset-classes',
+        description: 'Reset all class roles and clear chat history (Admin only)',
       },
       {
         name: 'help',

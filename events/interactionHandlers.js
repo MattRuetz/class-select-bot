@@ -66,5 +66,23 @@ module.exports = {
         await setSelectableClassesCommand.handleSelection(interaction);
       }
     }
+
+    // Handle button interactions
+    if (interaction.isButton()) {
+      const resetClassesCommand = client.commands.get('reset-classes');
+      
+      switch (interaction.customId) {
+        case 'reset-confirm-1':
+          await resetClassesCommand.handleFirstConfirmation(interaction);
+          break;
+        case 'reset-cancel-1':
+        case 'reset-cancel-2':
+          await resetClassesCommand.handleCancel(interaction);
+          break;
+        case 'reset-confirm-2':
+          await resetClassesCommand.handleFinalConfirmation(interaction);
+          break;
+      }
+    }
   }
 };

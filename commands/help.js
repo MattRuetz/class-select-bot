@@ -7,12 +7,13 @@ module.exports = {
     const isAdmin = member.permissions.has('Administrator');
     
     let helpMessage = '**Available UsherBot Commands:**\n\n' +
-      '`/select-class` or `.select-class` - Select a class to join\n' +
+      '`/select-classes` - Select classes to join\n' +
       '`/help` or `.usherbot` or `.usherbot-help` - Show this help message\n';
     
     if (isAdmin) {
       helpMessage += '\n**Admin Commands:**\n' +
-        '`/set-selectable-classes` or `.set-selectable-classes` - Configure which classes are available for selection\n';
+        '`/set-selectable-classes` - Configure which classes are available for selection\n' +
+        '`/reset-classes` - Reset all class roles and clear chat history\n';
     }
     
     const reply = {
