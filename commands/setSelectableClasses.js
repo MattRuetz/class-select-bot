@@ -89,6 +89,31 @@ module.exports = {
       // Update the valid array with selected values, only including channels that exist
       const newValid = interaction.values.filter(value => currentChannels.includes(value));
 
+      // Create/verify roles and apply them to channels
+      for (const className of newValid) {
+        // Find or create role
+        let role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === className);
+        if (!role) {
+          role = await interaction.guild.roles.create({
+            name: className,
+            reason: 'Created for class selection system'
+          });
+        }
+
+        // Find channel and update permissions
+        const channel = interaction.guild.channels.cache.find(
+          ch => ch.name.toLowerCase() === className
+        );
+        
+        if (channel) {
+          await channel.permissionOverwrites.edit(role, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true
+          });
+        }
+      }
+
       // Update the JSON file
       const configPath = path.join(__dirname, '..', 'config', 'selectableClasses.json');
       await fs.writeFile(
