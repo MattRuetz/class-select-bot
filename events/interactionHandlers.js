@@ -80,7 +80,7 @@ module.exports = {
 
           await interaction.update({
             content: `Your class selections have been updated: ${uniqueSelections.join(', ') || 'none'}`,
-            components: [],
+            components: updatedRows,
             ephemeral: true
           });
         } catch (error) {
