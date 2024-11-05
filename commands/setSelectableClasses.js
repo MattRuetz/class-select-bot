@@ -44,19 +44,28 @@ module.exports = {
         return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
       }
 
-      const row = new ActionRowBuilder()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId('admin-class-select')
-            .setPlaceholder('Select classes to make selectable')
-            .setMinValues(0)
-            .setMaxValues(allChannels.length)
-            .addOptions(allChannels)
-        );
+      // Split channels into chunks of 25
+      const channelChunks = [];
+      for (let i = 0; i < allChannels.length; i += 25) {
+        channelChunks.push(allChannels.slice(i, i + 25));
+      }
+
+      // Create a row with a select menu for each chunk
+      const rows = channelChunks.map((chunk, index) => 
+        new ActionRowBuilder()
+          .addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId(`admin-class-select-${index}`)
+              .setPlaceholder(`Select classes (Group ${index + 1})`)
+              .setMinValues(0)
+              .setMaxValues(chunk.length)
+              .addOptions(chunk)
+          )
+      );
 
       const reply = { 
         content: 'Select which classes should be available for users to join:',
-        components: [row],
+        components: rows,
         ephemeral: true
       };
       return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
@@ -81,13 +90,25 @@ module.exports = {
     }
 
     try {
-      // Get all current channel names in the server
-      const currentChannels = interaction.guild.channels.cache
-        .filter(channel => channel.type === 0)
-        .map(channel => channel.name.toLowerCase());
+      // Get all current selections from all menus
+      const allSelections = [];
+      const components = interaction.message.components;
+      
+      for (const row of components) {
+        const menu = row.components[0];
+        const menuId = menu.customId;
+        if (menuId === interaction.customId) {
+          // This is the menu that was just interacted with
+          allSelections.push(...interaction.values);
+        } else {
+          // Get the selected values from other menus
+          const selectedOptions = menu.options.filter(opt => opt.default);
+          allSelections.push(...selectedOptions.map(opt => opt.value));
+        }
+      }
 
-      // Update the valid array with selected values, only including channels that exist
-      const newValid = interaction.values.filter(value => currentChannels.includes(value));
+      // Update the valid array with selected values
+      const newValid = [...new Set(allSelections)]; // Remove duplicates
 
       // Create/verify roles and apply them to channels
       for (const className of newValid) {
@@ -114,6 +135,23 @@ module.exports = {
         }
       }
 
+      // Update the message to show current selections
+      const updatedRows = components.map(row => {
+        const menu = row.components[0];
+        const updatedOptions = menu.options.map(opt => ({
+          ...opt,
+          default: newValid.includes(opt.value)
+        }));
+        menu.options = updatedOptions;
+        return row;
+      });
+
+      await interaction.update({
+        content: `Updated selectable classes to: ${newValid.join(', ') || 'none'}`,
+        components: updatedRows,
+        ephemeral: true
+      });
+
       // Update the JSON file
       const configPath = path.join(__dirname, '..', 'config', 'selectableClasses.json');
       await fs.writeFile(
@@ -121,10 +159,6 @@ module.exports = {
         JSON.stringify({ valid: newValid }, null, 2)
       );
 
-      await interaction.reply({ 
-        content: `Updated selectable classes to: ${newValid.join(', ') || 'none'}`,
-        ephemeral: true 
-      });
     } catch (error) {
       console.error(error);
       await interaction.reply({ 

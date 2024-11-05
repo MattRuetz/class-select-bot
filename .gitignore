@@ -23,3 +23,6 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# local data
+selectableClasses.json

@@ -61,7 +61,7 @@ module.exports = {
         }
       }
       
-      if (interaction.customId === 'admin-class-select') {
+      if (interaction.customId.startsWith('admin-class-select-')) {
         const setSelectableClassesCommand = client.commands.get('set-selectable-classes');
         await setSelectableClassesCommand.handleSelection(interaction);
       }
