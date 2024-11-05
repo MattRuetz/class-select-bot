@@ -138,12 +138,21 @@ module.exports = {
       // Update the message to show current selections
       const updatedRows = components.map(row => {
         const menu = row.components[0];
-        const updatedOptions = menu.options.map(opt => ({
-          ...opt,
-          default: newValid.includes(opt.value)
-        }));
-        menu.options = updatedOptions;
-        return row;
+        return new ActionRowBuilder()
+          .addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId(menu.customId)
+              .setPlaceholder(menu.placeholder)
+              .setMinValues(0)
+              .setMaxValues(menu.options.length)
+              .addOptions(
+                menu.options.map(opt => ({
+                  label: opt.label,
+                  value: opt.value,
+                  default: newValid.includes(opt.value)
+                }))
+              )
+          );
       });
 
       await interaction.update({
