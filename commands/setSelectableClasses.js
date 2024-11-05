@@ -148,7 +148,7 @@ module.exports = {
 
       await interaction.update({
         content: `Updated selectable classes to: ${newValid.join(', ') || 'none'}`,
-        components: updatedRows,
+        components: [],
         ephemeral: true
       });
 
