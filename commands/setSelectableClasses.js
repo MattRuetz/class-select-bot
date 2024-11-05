@@ -89,6 +89,9 @@ module.exports = {
       });
     }
 
+    // Acknowledge the interaction immediately
+    await interaction.deferUpdate();
+
     try {
       // Get all current selections from all menus
       const allSelections = [];
@@ -98,21 +101,17 @@ module.exports = {
         const menu = row.components[0];
         const menuId = menu.customId;
         if (menuId === interaction.customId) {
-          // This is the menu that was just interacted with
           allSelections.push(...interaction.values);
         } else {
-          // Get the selected values from other menus
           const selectedOptions = menu.options.filter(opt => opt.default);
           allSelections.push(...selectedOptions.map(opt => opt.value));
         }
       }
 
-      // Update the valid array with selected values
-      const newValid = [...new Set(allSelections)]; // Remove duplicates
+      const newValid = [...new Set(allSelections)];
 
       // Create/verify roles and apply them to channels
       for (const className of newValid) {
-        // Find or create role
         let role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === className);
         if (!role) {
           role = await interaction.guild.roles.create({
@@ -121,7 +120,6 @@ module.exports = {
           });
         }
 
-        // Find channel and update permissions
         const channel = interaction.guild.channels.cache.find(
           ch => ch.name.toLowerCase() === className
         );
@@ -155,10 +153,10 @@ module.exports = {
           );
       });
 
-      await interaction.update({
+      // Update the interaction with the final state
+      await interaction.editReply({
         content: `Updated selectable classes to: ${newValid.join(', ') || 'none'}`,
         components: updatedRows,
-        ephemeral: true
       });
 
       // Update the JSON file
@@ -170,9 +168,9 @@ module.exports = {
 
     } catch (error) {
       console.error(error);
-      await interaction.reply({ 
+      await interaction.editReply({ 
         content: 'An error occurred while updating selectable classes.',
-        ephemeral: true 
+        components: interaction.message.components
       });
     }
   }

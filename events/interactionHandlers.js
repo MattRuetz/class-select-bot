@@ -24,6 +24,7 @@ module.exports = {
     if (interaction.isStringSelectMenu()) {
       if (interaction.customId.startsWith('class-select-')) {
         try {
+          await interaction.deferUpdate();
           // Get all current selections from all menus
           const allSelections = [];
           const components = interaction.message.components;
