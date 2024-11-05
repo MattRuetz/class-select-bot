@@ -20,21 +20,41 @@ module.exports = {
     
     // Handle select menus
     if (interaction.isStringSelectMenu()) {
-      if (interaction.customId === 'class-select') {
+      if (interaction.customId.startsWith('class-select-')) {
         try {
+          // Get all current selections from all menus
+          const allSelections = [];
+          const components = interaction.message.components;
+          
+          for (const row of components) {
+            const menu = row.components[0];
+            const menuId = menu.customId;
+            if (menuId === interaction.customId) {
+              // This is the menu that was just interacted with
+              allSelections.push(...interaction.values);
+            } else {
+              // Get the selected values from other menus
+              const selectedOptions = menu.options.filter(opt => opt.default);
+              allSelections.push(...selectedOptions.map(opt => opt.value));
+            }
+          }
+
+          // Remove duplicates
+          const uniqueSelections = [...new Set(allSelections)];
+
           // Get all current class roles the user has
           const currentClassRoles = interaction.member.roles.cache
             .filter(role => selectableClasses.valid.includes(role.name.toLowerCase()));
           
           // Remove roles that aren't in the new selection
           for (const role of currentClassRoles.values()) {
-            if (!interaction.values.includes(role.name.toLowerCase())) {
+            if (!uniqueSelections.includes(role.name.toLowerCase())) {
               await interaction.member.roles.remove(role);
             }
           }
 
           // Add new roles
-          for (const selectedClass of interaction.values) {
+          for (const selectedClass of uniqueSelections) {
             let role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === selectedClass.toLowerCase());
             
             if (!role) {
@@ -47,10 +67,21 @@ module.exports = {
             await interaction.member.roles.add(role);
           }
 
-          const classesJoined = interaction.values.join(', ');
-          await interaction.reply({ 
-            content: `Your class selections have been updated: ${classesJoined}`,
-            ephemeral: true 
+          // Update the message to show current selections
+          const updatedRows = components.map(row => {
+            const menu = row.components[0];
+            const updatedOptions = menu.options.map(opt => ({
+              ...opt,
+              default: uniqueSelections.includes(opt.value)
+            }));
+            menu.options = updatedOptions;
+            return row;
+          });
+
+          await interaction.update({
+            content: `Your class selections have been updated: ${uniqueSelections.join(', ') || 'none'}`,
+            components: updatedRows,
+            ephemeral: true
           });
         } catch (error) {
           console.error(error);

@@ -31,19 +31,28 @@ module.exports = {
       return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
     }
 
-    const row = new ActionRowBuilder()
-      .addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId('class-select')
-          .setPlaceholder('Select your classes')
-          .setMinValues(0)
-          .setMaxValues(availableChannels.length)
-          .addOptions(availableChannels)
-      );
+    // Split channels into chunks of 25
+    const channelChunks = [];
+    for (let i = 0; i < availableChannels.length; i += 25) {
+      channelChunks.push(availableChannels.slice(i, i + 25));
+    }
+
+    // Create a row with a select menu for each chunk
+    const rows = channelChunks.map((chunk, index) => 
+      new ActionRowBuilder()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`class-select-${index}`)
+            .setPlaceholder(`Select classes (Group ${index + 1})`)
+            .setMinValues(0)
+            .setMaxValues(chunk.length)
+            .addOptions(chunk)
+        )
+    );
 
     const reply = { 
       content: 'Select which classes you want to join:', 
-      components: [row],
+      components: rows,
       ephemeral: true 
     };
     return isSlashCommand ? interaction.reply(reply) : message.reply(reply);
